@@ -10,7 +10,11 @@
 				box-sizing: border-box;
 			}
 
-			html,
+			/* FIX #3: scroll-behavior smooth para los links del nav */
+			html {
+				scroll-behavior: smooth;
+			}
+
 			body {
 				width: 100%;
 				background: #0b0f1a;
@@ -22,13 +26,7 @@
 				overflow-x: hidden;
 			}
 
-			.container {
-				width: 760px;
-				max-width: 100%;
-				margin: 0 auto;
-				padding: 88px 16px 40px;
-			}
-
+			/* FIX #1: nav fuera del container, correctamente posicionado */
 			.top-nav {
 				display: flex;
 				justify-content: center;
@@ -40,8 +38,7 @@
 				width: 100%;
 				z-index: 30;
 				background: rgba(11, 15, 26, 0.96);
-				padding: 16px 16px;
-				margin-bottom: 0;
+				padding: 16px;
 			}
 
 			.top-nav a {
@@ -62,21 +59,95 @@
 				transform: translateY(-1px);
 			}
 
-			header h1 {
-				text-align: center;
-				margin-bottom: 20px;
-				font-size: 28px;
+			/* Barra tipo de cambio BCCR — debajo del nav */
+			.tc-bar {
+				position: fixed;
+				top: 58px;
+				left: 0;
+				right: 0;
+				z-index: 29;
+				background: rgba(0, 20, 40, 0.97);
+				border-bottom: 1px solid rgba(0, 229, 255, 0.2);
+				padding: 7px 16px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 24px;
+				font-size: 13px;
+				color: #a0c4e0;
+				flex-wrap: wrap;
+			}
+
+			.tc-bar .tc-badge {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+			}
+
+			.tc-bar .tc-label {
+				font-size: 11px;
+				text-transform: uppercase;
+				letter-spacing: 0.06em;
+				color: #5a7fa0;
+			}
+
+			.tc-bar .tc-value {
+				font-size: 15px;
+				font-weight: bold;
+				color: #00e5ff;
+				font-variant-numeric: tabular-nums;
+			}
+
+			.tc-bar .tc-source {
+				font-size: 11px;
+				color: #4a7a9a;
+			}
+
+			.tc-bar .tc-sep {
+				width: 1px;
+				height: 16px;
+				background: rgba(0, 229, 255, 0.15);
+				flex-shrink: 0;
+			}
+
+			.tc-bar.loading .tc-value {
+				color: #3a5a70;
+				animation: blink 1.2s ease-in-out infinite;
+			}
+
+			.tc-bar.error .tc-value {
+				color: #ff6b6b;
+				font-size: 12px;
+				font-weight: normal;
+			}
+
+			@keyframes blink {
+				0%,
+				100% {
+					opacity: 0.35;
+				}
+				50% {
+					opacity: 1;
+				}
+			}
+
+			/* padding-top = nav (58px) + barra TC (~34px) = 92px + margen */
+			.container {
+				width: 760px;
+				max-width: 100%;
+				margin: 0 auto;
+				padding: 106px 16px 40px;
 			}
 
 			.section {
-				min-height: calc(100vh - 80px);
+				min-height: calc(100vh - 58px);
 				display: flex;
 				flex-direction: column;
 				align-items: center;
 				justify-content: flex-start;
 				padding-top: 60px;
 				margin-bottom: 10px;
-				scroll-margin-top: 90px;
+				scroll-margin-top: 92px; /* nav + barra TC */
 			}
 
 			h2 {
@@ -97,169 +168,216 @@
 			.row {
 				display: flex;
 				justify-content: space-between;
+				align-items: center;
 				margin: 10px 0;
 			}
 
 			input {
-				width: 120px;
-				padding: 5px;
+				width: 140px;
+				padding: 6px 8px;
 				border-radius: 5px;
-				border: none;
+				border: 1px solid rgba(208, 231, 255, 0.3);
+				background: #1a2540;
+				color: #fff;
 				text-align: right;
+				font-size: 15px;
 			}
 
+			input:focus {
+				outline: none;
+				border-color: #00e5ff;
+			}
+
+			/* FIX resultado: asegurar visibilidad y añadir transición */
 			.result {
-				font-size: 20px;
+				font-size: 22px;
 				font-weight: bold;
 				text-align: right;
-				margin-top: 15px;
+				margin-top: 20px;
+				padding: 12px;
+				background: rgba(0, 229, 255, 0.08);
+				border-left: 3px solid #00e5ff;
+				border-radius: 6px;
 				color: #00e5ff;
+				transition: background 0.2s ease;
 			}
 
-			/* Responsive Design */
+			.result.flash {
+				background: rgba(0, 229, 255, 0.2);
+			}
+
+			/* Responsive */
 			@media (max-width: 768px) {
 				.container {
 					width: 100%;
-					max-width: 100%;
-					padding: 88px 12px 40px;
+					padding: 100px 12px 40px;
 				}
 
 				.top-nav {
-					flex-wrap: wrap;
 					gap: 8px;
-					padding: 12px 0;
+					padding: 10px 12px;
 				}
 
 				.top-nav a {
-					padding: 8px 12px;
+					padding: 8px 14px;
 					font-size: 14px;
 				}
 
-				header h1 {
-					font-size: 24px;
-					margin-bottom: 16px;
+				.tc-bar {
+					top: 52px;
+					gap: 14px;
+					padding: 6px 12px;
+					font-size: 12px;
+				}
+
+				.tc-bar .tc-value {
+					font-size: 14px;
 				}
 
 				.section {
-					min-height: calc(100vh - 60px);
+					scroll-margin-top: 86px;
 					padding-top: 40px;
-					scroll-margin-top: 70px;
 				}
 
 				h2 {
 					font-size: 20px;
-					margin-bottom: 16px;
 				}
 
 				.card {
 					padding: 16px;
-					margin-bottom: 20px;
 				}
 
 				.row {
 					flex-direction: column;
 					align-items: stretch;
-					gap: 8px;
+					gap: 6px;
 				}
 
 				.row label {
 					font-weight: bold;
-					margin-bottom: 4px;
 				}
 
+				/* FIX #5 mobile: font-size 16px previene zoom en iOS */
 				input {
 					width: 100%;
-					padding: 8px;
-					font-size: 16px; /* Prevents zoom on iOS */
+					font-size: 16px;
+					padding: 10px;
 				}
 
 				.result {
-					font-size: 18px;
+					font-size: 20px;
 					text-align: center;
-					margin-top: 20px;
 				}
 			}
 
+			/* FIX #2 mobile: padding dinámico cuando nav es más alta */
 			@media (max-width: 480px) {
-				.container {
-					padding: 88px 10px 30px;
-				}
-
 				.top-nav {
-					flex-direction: column;
-					align-items: center;
-					padding: 14px 0;
-					width: 100%;
+					flex-wrap: wrap;
+					justify-content: center;
+					padding: 10px;
+					gap: 8px;
 				}
 
 				.top-nav a {
-					width: 100%;
-					max-width: 200px;
-					text-align: center;
+					padding: 8px 16px;
+					font-size: 14px;
 				}
 
-				header h1 {
-					font-size: 20px;
+				/* nav ~2 filas ≈ 80px + barra TC ≈ 30px */
+				.container {
+					padding-top: 118px;
+				}
+
+				.tc-bar {
+					top: 80px;
 				}
 
 				.section {
-					min-height: calc(100vh - 50px);
+					scroll-margin-top: 110px;
 					padding-top: 30px;
-				}
-
-				h2 {
-					font-size: 18px;
-				}
-
-				.card {
-					padding: 12px;
 				}
 			}
 		</style>
 	</head>
 
 	<body>
-		<div class="container">
-			<nav class="top-nav">
-				<a href="#dolares">$$$</a>
-				<a href="#colones">₡₡₡</a>
-				<a href="#envio">Envío</a>
-			</nav>
+		<!-- FIX #1: nav fuera del container -->
+		<nav class="top-nav">
+			<a href="#dolares">$$$</a>
+			<a href="#colones">₡₡₡</a>
+			<a href="#envio">Envío</a>
+		</nav>
 
+		<!-- Barra tipo de cambio oficial BCCR -->
+		<div class="tc-bar loading" id="tcBar">
+			<div class="tc-badge">
+				<span class="tc-label">Compra</span>
+				<span class="tc-value" id="tcCompra">—</span>
+			</div>
+			<div class="tc-sep"></div>
+			<div class="tc-badge">
+				<span class="tc-label">Venta</span>
+				<span class="tc-value" id="tcVenta">—</span>
+			</div>
+			<div class="tc-sep"></div>
+			<span class="tc-source" id="tcFecha">Cargando · Fuente: BCCR</span>
+		</div>
+
+		<div class="container">
 			<section id="dolares" class="section">
 				<h2>💰 $$$ 💰</h2>
 				<div class="card">
 					<div class="row">
-						<label>Costo:</label>
-						<input type="number" id="costo1" value="0" />
+						<label for="costo1">Costo (USD):</label>
+						<input
+							type="number"
+							id="costo1"
+							value="0"
+							min="0"
+							inputmode="decimal"
+						/>
 					</div>
-
 					<div class="row">
-						<label>Utilidad:</label>
+						<label for="utilidad1">Utilidad (%):</label>
 						<input
 							type="number"
 							step="0.01"
 							id="utilidad1"
-							value="1.15"
+							value="15"
+							inputmode="decimal"
 						/>
 					</div>
-
 					<div class="row">
-						<label>Impuesto (IV):</label>
+						<label for="iv1">Impuesto (IV) (%):</label>
 						<input
 							type="number"
 							step="0.01"
 							id="iv1"
-							value="1.13"
+							value="13"
+							inputmode="decimal"
 						/>
 					</div>
-
 					<div class="row">
-						<label>Tipo de Cambio:</label>
-						<input type="number" id="tc" value="500" />
+						<label for="fro1">F. Rec. Operativo (%):</label>
+						<input
+							type="number"
+							step="0.01"
+							id="fro1"
+							value="1.01"
+							inputmode="decimal"
+						/>
 					</div>
-
-					<div class="result" id="resultado1">₡0.00</div>
+					<div class="row">
+						<label for="tc">Tipo de Cambio:</label>
+						<input
+							type="number"
+							id="tc"
+							value="500"
+							inputmode="decimal"
+						/>
+					</div>
+					<div class="result" id="resultado1">₡ 0.00</div>
 				</div>
 			</section>
 
@@ -267,31 +385,46 @@
 				<h2>🧾 ₡₡₡ 🧾</h2>
 				<div class="card">
 					<div class="row">
-						<label>Costo:</label>
-						<input type="number" id="costo2" value="0" />
+						<label for="costo2">Costo (₡):</label>
+						<input
+							type="number"
+							id="costo2"
+							value="0"
+							min="0"
+							inputmode="decimal"
+						/>
 					</div>
-
 					<div class="row">
-						<label>Utilidad:</label>
+						<label for="utilidad2">Utilidad (%):</label>
 						<input
 							type="number"
 							step="0.01"
 							id="utilidad2"
-							value="1.15"
+							value="15"
+							inputmode="decimal"
 						/>
 					</div>
-
 					<div class="row">
-						<label>Impuesto (IV):</label>
+						<label for="iv2">Impuesto (IV) (%):</label>
 						<input
 							type="number"
 							step="0.01"
 							id="iv2"
-							value="1.13"
+							value="13"
+							inputmode="decimal"
 						/>
 					</div>
-
-					<div class="result" id="resultado2">₡0.00</div>
+					<div class="row">
+						<label for="fro2">F. Rec. Operativo (%):</label>
+						<input
+							type="number"
+							step="0.01"
+							id="fro2"
+							value="1.01"
+							inputmode="decimal"
+						/>
+					</div>
+					<div class="result" id="resultado2">₡ 0.00</div>
 				</div>
 			</section>
 
@@ -299,85 +432,157 @@
 				<h2>🚚 Cálculo de Envío</h2>
 				<div class="card">
 					<div class="row">
-						<label>Peso (kg):</label>
-						<input type="number" step="0.01" id="peso" value="5" />
+						<label for="peso">Peso (kg):</label>
+						<input
+							type="number"
+							step="0.01"
+							id="peso"
+							value="5"
+							min="0"
+							inputmode="decimal"
+						/>
 					</div>
-
 					<div class="row">
-						<label>Tarifa por kg:</label>
+						<label for="tarifa">Tarifa por kg (₡):</label>
 						<input
 							type="number"
 							step="0.01"
 							id="tarifa"
 							value="12.5"
+							inputmode="decimal"
 						/>
 					</div>
-
 					<div class="row">
-						<label>Recargo fijo:</label>
+						<label for="recargo">Recargo fijo (₡):</label>
 						<input
 							type="number"
 							step="0.01"
 							id="recargo"
 							value="10"
+							inputmode="decimal"
 						/>
 					</div>
-
-					<div class="result" id="resultado3">₡0.00</div>
+					<div class="result" id="resultado3">₡ 0.00</div>
 				</div>
 			</section>
 		</div>
 
 		<script>
-			function calcular() {
-				// Con tipo de cambio
-				let costo1 =
-					parseFloat(document.getElementById("costo1").value) || 0;
-				let utilidad1 =
-					parseFloat(document.getElementById("utilidad1").value) || 0;
-				let iv1 = parseFloat(document.getElementById("iv1").value) || 0;
-				let tc = parseFloat(document.getElementById("tc").value) || 0;
+			// ─── Tipo de cambio oficial BCCR ──────────────────────────────────
+			async function cargarTipoDeCambio() {
+				const bar = document.getElementById("tcBar");
+				try {
+					// Usar fecha de hoy en la URL para evitar caché del navegador
+					const hoy = new Date();
+					const dd = String(hoy.getDate()).padStart(2, "0");
+					const mm = String(hoy.getMonth() + 1).padStart(2, "0");
+					const yyyy = hoy.getFullYear();
+					const url = `https://tipodecambio.paginasweb.cr/api/${dd}/${mm}/${yyyy}`;
 
-				let precio1 = costo1 * utilidad1 * iv1 * tc;
-				document.getElementById("resultado1").innerText =
-					"₡ " +
-					precio1.toLocaleString("es-CR", {
-						minimumFractionDigits: 2,
-					});
+					const resp = await fetch(url);
+					if (!resp.ok) throw new Error("HTTP " + resp.status);
+					const data = await resp.json();
 
-				// Sin tipo de cambio
-				let costo2 =
-					parseFloat(document.getElementById("costo2").value) || 0;
-				let utilidad2 =
-					parseFloat(document.getElementById("utilidad2").value) || 0;
-				let iv2 = parseFloat(document.getElementById("iv2").value) || 0;
+					// La API devuelve { compra: "XXX.XX", venta: "XXX.XX", fecha: "DD/MM/YYYY" }
+					const compra = parseFloat(data.compra);
+					const venta = parseFloat(data.venta);
 
-				let precio2 = costo2 * utilidad2 * iv2;
-				document.getElementById("resultado2").innerText =
-					"₡ " +
-					precio2.toLocaleString("es-CR", {
-						minimumFractionDigits: 2,
-					});
+					const fmt = (n) =>
+						n.toLocaleString("es-CR", {
+							minimumFractionDigits: 2,
+							maximumFractionDigits: 2,
+						});
 
-				// Envío
-				let peso =
-					parseFloat(document.getElementById("peso").value) || 0;
-				let tarifa =
-					parseFloat(document.getElementById("tarifa").value) || 0;
-				let recargo =
-					parseFloat(document.getElementById("recargo").value) || 0;
+					document.getElementById("tcCompra").textContent =
+						"₡ " + fmt(compra);
+					document.getElementById("tcVenta").textContent =
+						"₡ " + fmt(venta);
+					document.getElementById("tcFecha").textContent =
+						`${data.fecha} · Fuente: BCCR`;
 
-				let envio = peso * tarifa + recargo;
-				document.getElementById("resultado3").innerText =
-					"₡ " +
-					envio.toLocaleString("es-CR", { minimumFractionDigits: 2 });
+					// Auto-rellenar el campo Tipo de Cambio con el valor de venta
+					const tcInput = document.getElementById("tc");
+					tcInput.value = venta.toFixed(2);
+					calcular(); // recalcular con el TC actualizado
+
+					bar.classList.remove("loading", "error");
+				} catch (err) {
+					console.error("Error BCCR:", err);
+					bar.classList.remove("loading");
+					bar.classList.add("error");
+					document.getElementById("tcCompra").textContent = "—";
+					document.getElementById("tcVenta").textContent = "—";
+					document.getElementById("tcFecha").textContent =
+						"No disponible · BCCR";
+				}
 			}
 
+			// ─── Calcular ──────────────────────────────────────────────────────
+			function setResult(id, value) {
+				const el = document.getElementById(id);
+				el.textContent =
+					"₡ " +
+					value.toLocaleString("es-CR", {
+						minimumFractionDigits: 2,
+						maximumFractionDigits: 2,
+					});
+				el.classList.remove("flash");
+				// Forzar reflow para reiniciar la animación
+				void el.offsetWidth;
+				el.classList.add("flash");
+				setTimeout(() => el.classList.remove("flash"), 300);
+			}
+
+			function getVal(id) {
+				return parseFloat(document.getElementById(id).value) || 0;
+			}
+
+			function calcular() {
+				// --- Sección 1: Costo en USD → precio en ₡ ---
+				const costo1 = getVal("costo1");
+				const utilidad1 = getVal("utilidad1");
+				const iv1 = getVal("iv1");
+				const fro1 = getVal("fro1");
+				const tc = getVal("tc");
+
+				const precio1 =
+					costo1 *
+					(1 + utilidad1 / 100) *
+					(1 + iv1 / 100) *
+					(1 + fro1 / 100) *
+					tc;
+				setResult("resultado1", precio1);
+
+				// --- Sección 2: Costo en ₡ → precio en ₡ ---
+				const costo2 = getVal("costo2");
+				const utilidad2 = getVal("utilidad2");
+				const iv2 = getVal("iv2");
+				const fro2 = getVal("fro2");
+
+				const precio2 =
+					costo2 *
+					(1 + utilidad2 / 100) *
+					(1 + iv2 / 100) *
+					(1 + fro2 / 100);
+				setResult("resultado2", precio2);
+
+				// --- Sección 3: Envío ---
+				const peso = getVal("peso");
+				const tarifa = getVal("tarifa");
+				const recargo = getVal("recargo");
+
+				const envio = peso * tarifa + recargo;
+				setResult("resultado3", envio);
+			}
+
+			// Escuchar cambios en todos los inputs
 			document.querySelectorAll("input").forEach((input) => {
 				input.addEventListener("input", calcular);
 			});
 
+			// Calcular al cargar y pedir TC al BCCR
 			calcular();
+			cargarTipoDeCambio();
 		</script>
 	</body>
 </html>
