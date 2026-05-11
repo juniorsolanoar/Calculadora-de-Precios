@@ -2,34 +2,45 @@
 <html lang="es">
 	<head>
 		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Calculadora</title>
 
 		<style>
+			* {
+				box-sizing: border-box;
+			}
+
+			html,
 			body {
+				width: 100%;
 				background: #0b0f1a;
 				color: #fff;
 				font-family: Arial, sans-serif;
 				margin: 0;
 				padding: 0;
 				min-height: 100vh;
+				overflow-x: hidden;
 			}
 
 			.container {
 				width: 760px;
 				max-width: 100%;
 				margin: 0 auto;
-				padding: 20px 16px 40px;
+				padding: 88px 16px 40px;
 			}
 
 			.top-nav {
 				display: flex;
 				justify-content: center;
 				gap: 16px;
-				position: sticky;
+				position: fixed;
 				top: 0;
-				z-index: 20;
+				left: 0;
+				right: 0;
+				width: 100%;
+				z-index: 30;
 				background: rgba(11, 15, 26, 0.96);
-				padding: 16px 0;
+				padding: 16px 16px;
 				margin-bottom: 0;
 			}
 
@@ -74,6 +85,8 @@
 			}
 
 			.card {
+				width: 100%;
+				max-width: 760px;
 				background: #121a2a;
 				padding: 20px;
 				border-radius: 12px;
@@ -107,7 +120,8 @@
 			@media (max-width: 768px) {
 				.container {
 					width: 100%;
-					padding: 16px 12px 40px;
+					max-width: 100%;
+					padding: 88px 12px 40px;
 				}
 
 				.top-nav {
@@ -167,9 +181,15 @@
 			}
 
 			@media (max-width: 480px) {
+				.container {
+					padding: 88px 10px 30px;
+				}
+
 				.top-nav {
 					flex-direction: column;
 					align-items: center;
+					padding: 14px 0;
+					width: 100%;
 				}
 
 				.top-nav a {
@@ -199,15 +219,12 @@
 	</head>
 
 	<body>
-		
+		<div class="container">
 			<nav class="top-nav">
 				<a href="#dolares">$$$</a>
 				<a href="#colones">₡₡₡</a>
 				<a href="#envio">Envío</a>
 			</nav>
-            <div class="container"></div>
-
-	
 
 			<section id="dolares" class="section">
 				<h2>💰 $$$ 💰</h2>
