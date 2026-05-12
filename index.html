@@ -10,7 +10,6 @@
 				box-sizing: border-box;
 			}
 
-			/* FIX #3: scroll-behavior smooth para los links del nav */
 			html {
 				scroll-behavior: smooth;
 			}
@@ -26,7 +25,6 @@
 				overflow-x: hidden;
 			}
 
-			/* FIX #1: nav fuera del container, correctamente posicionado */
 			.top-nav {
 				display: flex;
 				justify-content: center;
@@ -59,10 +57,9 @@
 				transform: translateY(-1px);
 			}
 
-			/* Barra tipo de cambio BCCR — debajo del nav */
 			.tc-bar {
 				position: fixed;
-				top: 58px;
+				top: 75px;
 				left: 0;
 				right: 0;
 				z-index: 29;
@@ -96,6 +93,7 @@
 				font-weight: bold;
 				color: #00e5ff;
 				font-variant-numeric: tabular-nums;
+				font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 			}
 
 			.tc-bar .tc-source {
@@ -131,7 +129,6 @@
 				}
 			}
 
-			/* padding-top = nav (58px) + barra TC (~34px) = 92px + margen */
 			.container {
 				width: 760px;
 				max-width: 100%;
@@ -145,9 +142,9 @@
 				flex-direction: column;
 				align-items: center;
 				justify-content: flex-start;
-				padding-top: 60px;
+				padding-top: 20px;
 				margin-bottom: 10px;
-				scroll-margin-top: 92px; /* nav + barra TC */
+				scroll-margin-top: 92px;
 			}
 
 			h2 {
@@ -172,7 +169,7 @@
 				margin: 10px 0;
 			}
 
-			input {
+			input[type="number"] {
 				width: 140px;
 				padding: 6px 8px;
 				border-radius: 5px;
@@ -183,12 +180,17 @@
 				font-size: 15px;
 			}
 
-			input:focus {
+			input[type="number"]:focus {
 				outline: none;
 				border-color: #00e5ff;
 			}
 
-			/* FIX resultado: asegurar visibilidad y añadir transición */
+			input[type="range"] {
+				width: 100%;
+				margin: 8px 0 4px;
+				accent-color: #00e5ff;
+			}
+
 			.result {
 				font-size: 22px;
 				font-weight: bold;
@@ -200,10 +202,86 @@
 				border-radius: 6px;
 				color: #00e5ff;
 				transition: background 0.2s ease;
+				font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+				letter-spacing: 0.02em;
 			}
 
 			.result.flash {
 				background: rgba(0, 229, 255, 0.2);
+			}
+
+			.slider-labels {
+				display: flex;
+				justify-content: space-between;
+				font-size: 11px;
+				color: #5a7fa0;
+				margin-bottom: 12px;
+			}
+
+			.reglas-box {
+				background: rgba(255, 255, 255, 0.04);
+				border-radius: 8px;
+				padding: 10px 14px;
+				margin-bottom: 16px;
+				font-size: 13px;
+				color: #a0c4e0;
+			}
+
+			.regla {
+				padding: 3px 0;
+				transition: color 0.2s ease;
+			}
+
+			.regla + .regla {
+				margin-top: 4px;
+			}
+
+			.regla.active {
+				color: #00e5ff;
+				font-weight: bold;
+			}
+
+			.regla.inactive {
+				color: #5a7fa0;
+				font-weight: normal;
+			}
+
+			/* ── Botón sticky mapa ── */
+			.btn-mapa {
+				position: fixed;
+				bottom: 28px;
+				right: 28px;
+				z-index: 40;
+				width: 52px;
+				height: 52px;
+				border-radius: 50%;
+				background: #0b1e30;
+				border: 1px solid rgba(0, 229, 255, 0.45);
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				transition:
+					background 0.2s ease,
+					border-color 0.2s ease,
+					transform 0.2s ease;
+				box-shadow: 0 0 12px rgba(0, 229, 255, 0.15);
+			}
+
+			.btn-mapa:hover {
+				background: rgba(0, 229, 255, 0.1);
+				border-color: #00e5ff;
+				transform: translateY(-2px);
+				box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+			}
+
+			.btn-mapa:active {
+				transform: scale(0.95);
+			}
+
+			.btn-mapa svg {
+				width: 26px;
+				height: 26px;
 			}
 
 			/* Responsive */
@@ -236,7 +314,7 @@
 
 				.section {
 					scroll-margin-top: 86px;
-					padding-top: 40px;
+					padding-top: 5px;
 				}
 
 				h2 {
@@ -257,8 +335,7 @@
 					font-weight: bold;
 				}
 
-				/* FIX #5 mobile: font-size 16px previene zoom en iOS */
-				input {
+				input[type="number"] {
 					width: 100%;
 					font-size: 16px;
 					padding: 10px;
@@ -268,9 +345,20 @@
 					font-size: 20px;
 					text-align: center;
 				}
+
+				.btn-mapa {
+					bottom: 20px;
+					right: 20px;
+					width: 48px;
+					height: 48px;
+				}
+
+				.btn-mapa svg {
+					width: 22px;
+					height: 22px;
+				}
 			}
 
-			/* FIX #2 mobile: padding dinámico cuando nav es más alta */
 			@media (max-width: 480px) {
 				.top-nav {
 					flex-wrap: wrap;
@@ -284,7 +372,6 @@
 					font-size: 14px;
 				}
 
-				/* nav ~2 filas ≈ 80px + barra TC ≈ 30px */
 				.container {
 					padding-top: 118px;
 				}
@@ -295,21 +382,19 @@
 
 				.section {
 					scroll-margin-top: 110px;
-					padding-top: 30px;
+					padding-top: 16px;
 				}
 			}
 		</style>
 	</head>
 
 	<body>
-		<!-- FIX #1: nav fuera del container -->
 		<nav class="top-nav">
 			<a href="#dolares">$$$</a>
 			<a href="#colones">₡₡₡</a>
 			<a href="#envio">Envío</a>
 		</nav>
 
-		<!-- Barra tipo de cambio oficial BCCR -->
 		<div class="tc-bar loading" id="tcBar">
 			<div class="tc-badge">
 				<span class="tc-label">Compra</span>
@@ -432,47 +517,90 @@
 				<h2>🚚 Cálculo de Envío</h2>
 				<div class="card">
 					<div class="row">
-						<label for="peso">Peso (kg):</label>
+						<label for="distancia">Distancia (km):</label>
 						<input
 							type="number"
-							step="0.01"
-							id="peso"
-							value="5"
+							step="0.1"
+							id="distancia"
+							value="1"
 							min="0"
 							inputmode="decimal"
 						/>
 					</div>
-					<div class="row">
-						<label for="tarifa">Tarifa por kg (₡):</label>
-						<input
-							type="number"
-							step="0.01"
-							id="tarifa"
-							value="12.5"
-							inputmode="decimal"
-						/>
+
+					<input
+						type="range"
+						id="sliderDistancia"
+						min="0"
+						max="50"
+						step="0.1"
+						value="1"
+					/>
+					<div class="slider-labels">
+						<span>0 km</span>
+						<span>25 km</span>
+						<span>50 km</span>
 					</div>
-					<div class="row">
-						<label for="recargo">Recargo fijo (₡):</label>
-						<input
-							type="number"
-							step="0.01"
-							id="recargo"
-							value="10"
-							inputmode="decimal"
-						/>
+
+					<div class="reglas-box">
+						<div class="regla active" id="regla-corta">
+							⬤ Menos de 2 km → tarifa fija de ₡500
+						</div>
+						<div class="regla inactive" id="regla-larga">
+							⬤ 2 km o más → ₡250 por km
+						</div>
 					</div>
+
 					<div class="result" id="resultado3">₡ 0.00</div>
 				</div>
 			</section>
 		</div>
+
+		<!-- Botón sticky mapa -->
+		<button
+			class="btn-mapa"
+			id="btnMapa"
+			title="Ver en mapa"
+			aria-label="Ver en mapa"
+		>
+			<svg
+				viewBox="0 0 24 24"
+				fill="none"
+				xmlns="http://www.w3.org/2000/svg"
+			>
+				<path
+					d="M9 3L3 6v15l6-3 6 3 6-3V3l-6 3-6-3z"
+					stroke="#00e5ff"
+					stroke-width="1.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+				<line
+					x1="9"
+					y1="3"
+					x2="9"
+					y2="18"
+					stroke="#00e5ff"
+					stroke-width="1.5"
+					stroke-linecap="round"
+				/>
+				<line
+					x1="15"
+					y1="6"
+					x2="15"
+					y2="21"
+					stroke="#00e5ff"
+					stroke-width="1.5"
+					stroke-linecap="round"
+				/>
+			</svg>
+		</button>
 
 		<script>
 			// ─── Tipo de cambio oficial BCCR ──────────────────────────────────
 			async function cargarTipoDeCambio() {
 				const bar = document.getElementById("tcBar");
 				try {
-					// Usar fecha de hoy en la URL para evitar caché del navegador
 					const hoy = new Date();
 					const dd = String(hoy.getDate()).padStart(2, "0");
 					const mm = String(hoy.getMonth() + 1).padStart(2, "0");
@@ -483,12 +611,11 @@
 					if (!resp.ok) throw new Error("HTTP " + resp.status);
 					const data = await resp.json();
 
-					// La API devuelve { compra: "XXX.XX", venta: "XXX.XX", fecha: "DD/MM/YYYY" }
 					const compra = parseFloat(data.compra);
 					const venta = parseFloat(data.venta);
 
 					const fmt = (n) =>
-						n.toLocaleString("es-CR", {
+						n.toLocaleString("en-US", {
 							minimumFractionDigits: 2,
 							maximumFractionDigits: 2,
 						});
@@ -500,10 +627,9 @@
 					document.getElementById("tcFecha").textContent =
 						`${data.fecha} · Fuente: BCCR`;
 
-					// Auto-rellenar el campo Tipo de Cambio con el valor de venta
 					const tcInput = document.getElementById("tc");
 					tcInput.value = venta.toFixed(2);
-					calcular(); // recalcular con el TC actualizado
+					calcular();
 
 					bar.classList.remove("loading", "error");
 				} catch (err) {
@@ -517,17 +643,16 @@
 				}
 			}
 
-			// ─── Calcular ──────────────────────────────────────────────────────
+			// ─── Helpers ───────────────────────────────────────────────────────
 			function setResult(id, value) {
 				const el = document.getElementById(id);
 				el.textContent =
 					"₡ " +
-					value.toLocaleString("es-CR", {
+					value.toLocaleString("en-US", {
 						minimumFractionDigits: 2,
 						maximumFractionDigits: 2,
 					});
 				el.classList.remove("flash");
-				// Forzar reflow para reiniciar la animación
 				void el.offsetWidth;
 				el.classList.add("flash");
 				setTimeout(() => el.classList.remove("flash"), 300);
@@ -537,6 +662,7 @@
 				return parseFloat(document.getElementById(id).value) || 0;
 			}
 
+			// ─── Calcular ──────────────────────────────────────────────────────
 			function calcular() {
 				// --- Sección 1: Costo en USD → precio en ₡ ---
 				const costo1 = getVal("costo1");
@@ -567,17 +693,55 @@
 				setResult("resultado2", precio2);
 
 				// --- Sección 3: Envío ---
-				const peso = getVal("peso");
-				const tarifa = getVal("tarifa");
-				const recargo = getVal("recargo");
-
-				const envio = peso * tarifa + recargo;
+				const distancia = getVal("distancia");
+				const envio = distancia < 2 ? 500 : distancia * 250;
 				setResult("resultado3", envio);
+
+				const reglaCorta = document.getElementById("regla-corta");
+				const reglaLarga = document.getElementById("regla-larga");
+				if (distancia < 2) {
+					reglaCorta.classList.add("active");
+					reglaCorta.classList.remove("inactive");
+					reglaLarga.classList.add("inactive");
+					reglaLarga.classList.remove("active");
+				} else {
+					reglaLarga.classList.add("active");
+					reglaLarga.classList.remove("inactive");
+					reglaCorta.classList.add("inactive");
+					reglaCorta.classList.remove("active");
+				}
 			}
 
-			// Escuchar cambios en todos los inputs
-			document.querySelectorAll("input").forEach((input) => {
-				input.addEventListener("input", calcular);
+			// ─── Listeners ─────────────────────────────────────────────────────
+			document
+				.querySelectorAll("input[type='number']")
+				.forEach((input) => {
+					input.addEventListener("input", calcular);
+				});
+
+			const sliderDistancia = document.getElementById("sliderDistancia");
+			const distanciaInput = document.getElementById("distancia");
+
+			sliderDistancia.addEventListener("input", () => {
+				distanciaInput.value = parseFloat(
+					sliderDistancia.value,
+				).toFixed(1);
+				calcular();
+			});
+
+			distanciaInput.addEventListener("input", () => {
+				sliderDistancia.value = Math.min(
+					parseFloat(distanciaInput.value) || 0,
+					50,
+				);
+				calcular();
+			});
+
+			// ─── Botón mapa ────────────────────────────────────────────────────
+			document.getElementById("btnMapa").addEventListener("click", () => {
+				const distancia = getVal("distancia");
+				const query = `radio ${distancia} km`;
+				window.open(`calculo-envio.html`, "_blank");
 			});
 
 			// Calcular al cargar y pedir TC al BCCR

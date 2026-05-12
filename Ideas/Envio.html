@@ -1,0 +1,1368 @@
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Calculadora de Distancias — Compubetel</title>
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap"
+			rel="stylesheet"
+		/>
+
+		<style>
+			:root {
+				--bg: #0a0c10;
+				--surface: #12151c;
+				--surface2: #181c26;
+				--border: #1e2330;
+				--accent: #00e5ff;
+				--accent2: #ff3d71;
+				--text: #e8ecf4;
+				--muted: #5a6380;
+				--point-a: #00e5ff;
+				--point-b: #ff3d71;
+				--car-line: #f5a623;
+				--walk-line: #7ed321;
+			}
+
+			* {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+
+			body {
+				font-family: "Syne", sans-serif;
+				background: var(--bg);
+				color: var(--text);
+				height: 100vh;
+				display: grid;
+				grid-template-rows: auto 1fr;
+				overflow: hidden;
+			}
+
+			header {
+				padding: 11px 18px;
+				display: flex;
+				align-items: center;
+				gap: 14px;
+				background: var(--surface);
+				border-bottom: 1px solid var(--border);
+				z-index: 1000;
+				flex-wrap: wrap;
+			}
+
+			.logo {
+				font-size: 1rem;
+				font-weight: 800;
+				white-space: nowrap;
+				line-height: 1.1;
+			}
+			.logo span {
+				color: var(--accent);
+			}
+			.logo small {
+				display: block;
+				font-size: 0.52rem;
+				font-weight: 400;
+				color: var(--muted);
+				font-family: "Space Mono", monospace;
+				letter-spacing: 1px;
+				margin-top: 2px;
+			}
+
+			.mode-toggle {
+				display: flex;
+				gap: 4px;
+				background: var(--bg);
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 3px;
+			}
+			.mode-btn {
+				font-family: "Space Mono", monospace;
+				font-size: 0.68rem;
+				padding: 5px 12px;
+				border: none;
+				border-radius: 7px;
+				background: transparent;
+				color: var(--muted);
+				cursor: pointer;
+				transition: all 0.2s;
+			}
+			.mode-btn.active {
+				background: var(--surface);
+				color: var(--text);
+				box-shadow: 0 0 0 1px var(--border);
+			}
+			.mode-btn.active[data-mode="car"] {
+				color: var(--car-line);
+			}
+			.mode-btn.active[data-mode="walk"] {
+				color: var(--walk-line);
+			}
+			.mode-btn.active[data-mode="bike"] {
+				color: var(--accent);
+			}
+
+			.search-wrap {
+				position: relative;
+				flex: 1;
+				min-width: 220px;
+				max-width: 420px;
+			}
+
+			.search-icon {
+				position: absolute;
+				left: 11px;
+				top: 50%;
+				transform: translateY(-50%);
+				color: var(--muted);
+				font-size: 0.85rem;
+				pointer-events: none;
+				z-index: 2;
+				transition: opacity 0.2s;
+			}
+
+			#search-input {
+				width: 100%;
+				background: var(--bg);
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				color: var(--text);
+				font-family: "Space Mono", monospace;
+				font-size: 0.72rem;
+				padding: 8px 36px 8px 32px;
+				outline: none;
+				transition:
+					border-color 0.2s,
+					box-shadow 0.2s;
+			}
+			#search-input::placeholder {
+				color: var(--muted);
+			}
+			#search-input:focus {
+				border-color: var(--accent);
+				box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.1);
+			}
+			/* Highlight when a maps link is detected */
+			#search-input.maps-link {
+				border-color: #4ade80;
+				box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.12);
+				color: #4ade80;
+			}
+
+			#search-clear {
+				position: absolute;
+				right: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+				background: none;
+				border: none;
+				color: var(--muted);
+				cursor: pointer;
+				font-size: 0.9rem;
+				padding: 0;
+				display: none;
+				line-height: 1;
+			}
+			#search-clear:hover {
+				color: var(--accent2);
+			}
+
+			/* Maps link pill that appears below the input */
+			#maps-link-hint {
+				position: absolute;
+				top: calc(100% + 5px);
+				left: 0;
+				right: 0;
+				background: rgba(74, 222, 128, 0.08);
+				border: 1px solid rgba(74, 222, 128, 0.3);
+				border-radius: 8px;
+				padding: 7px 12px;
+				font-family: "Space Mono", monospace;
+				font-size: 0.62rem;
+				color: #4ade80;
+				display: none;
+				z-index: 1999;
+				gap: 8px;
+				align-items: center;
+			}
+			#maps-link-hint.visible {
+				display: flex;
+			}
+			#maps-link-hint .mh-icon {
+				font-size: 0.9rem;
+				flex-shrink: 0;
+			}
+			#maps-link-hint .mh-text {
+				flex: 1;
+				line-height: 1.4;
+			}
+			#maps-link-hint .mh-btn {
+				background: rgba(74, 222, 128, 0.15);
+				border: 1px solid rgba(74, 222, 128, 0.35);
+				border-radius: 6px;
+				color: #4ade80;
+				font-family: "Space Mono", monospace;
+				font-size: 0.6rem;
+				padding: 4px 10px;
+				cursor: pointer;
+				white-space: nowrap;
+				transition: background 0.15s;
+			}
+			#maps-link-hint .mh-btn:hover {
+				background: rgba(74, 222, 128, 0.28);
+			}
+			.mh-spinner {
+				width: 12px;
+				height: 12px;
+				border: 2px solid rgba(74, 222, 128, 0.2);
+				border-top-color: #4ade80;
+				border-radius: 50%;
+				animation: spin 0.7s linear infinite;
+				flex-shrink: 0;
+			}
+
+			#autocomplete {
+				position: absolute;
+				top: calc(100% + 6px);
+				left: 0;
+				right: 0;
+				background: var(--surface2);
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				z-index: 2000;
+				overflow: hidden;
+				display: none;
+				box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+			}
+			#autocomplete.open {
+				display: block;
+			}
+
+			.ac-item {
+				padding: 9px 14px;
+				font-family: "Space Mono", monospace;
+				font-size: 0.68rem;
+				cursor: pointer;
+				border-bottom: 1px solid var(--border);
+				display: flex;
+				align-items: flex-start;
+				gap: 10px;
+				transition: background 0.15s;
+			}
+			.ac-item:last-child {
+				border-bottom: none;
+			}
+			.ac-item:hover,
+			.ac-item.selected {
+				background: var(--border);
+			}
+			.ac-icon {
+				font-size: 1rem;
+				margin-top: 1px;
+				flex-shrink: 0;
+			}
+			.ac-main {
+				color: var(--text);
+				font-size: 0.7rem;
+				margin-bottom: 2px;
+			}
+			.ac-sub {
+				color: var(--muted);
+				font-size: 0.6rem;
+				line-height: 1.3;
+			}
+			.ac-loading {
+				padding: 12px 14px;
+				font-family: "Space Mono", monospace;
+				font-size: 0.65rem;
+				color: var(--muted);
+			}
+			.ac-empty {
+				padding: 12px 14px;
+				font-family: "Space Mono", monospace;
+				font-size: 0.65rem;
+				color: var(--muted);
+			}
+			.ac-item b {
+				color: var(--accent);
+				font-weight: 700;
+			}
+
+			.header-right {
+				margin-left: auto;
+				display: flex;
+				gap: 8px;
+				flex-wrap: wrap;
+				align-items: center;
+			}
+			.info-pill {
+				display: flex;
+				align-items: center;
+				gap: 7px;
+				background: var(--bg);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 5px 11px;
+				font-family: "Space Mono", monospace;
+				font-size: 0.6rem;
+			}
+			.pill-dot {
+				width: 7px;
+				height: 7px;
+				border-radius: 50%;
+				flex-shrink: 0;
+			}
+			.pill-dot.a {
+				background: var(--point-a);
+				box-shadow: 0 0 5px var(--point-a);
+			}
+			.pill-dot.b {
+				background: var(--point-b);
+				box-shadow: 0 0 5px var(--point-b);
+			}
+			.pill-label {
+				color: var(--muted);
+				font-size: 0.55rem;
+			}
+
+			#map-wrap {
+				position: relative;
+				overflow: hidden;
+				width: 100%;
+				height: 100%;
+			}
+			#map {
+				width: 100%;
+				height: 100%;
+				cursor: crosshair;
+			}
+
+			#hint {
+				position: absolute;
+				top: 14px;
+				left: 50%;
+				transform: translateX(-50%);
+				z-index: 900;
+				background: rgba(10, 12, 16, 0.9);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 7px 16px;
+				font-family: "Space Mono", monospace;
+				font-size: 0.68rem;
+				color: var(--muted);
+				pointer-events: none;
+				backdrop-filter: blur(8px);
+				transition: opacity 0.3s;
+				white-space: nowrap;
+			}
+			#hint.hidden {
+				opacity: 0;
+			}
+
+			#result-card {
+				position: absolute;
+				bottom: 28px;
+				left: 50%;
+				transform: translateX(-50%);
+				z-index: 900;
+				display: none;
+				background: rgba(10, 12, 16, 0.95);
+				border: 1px solid var(--border);
+				border-radius: 18px;
+				padding: 18px 26px;
+				backdrop-filter: blur(14px);
+				box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+				min-width: 290px;
+				animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+			}
+			#result-card.visible {
+				display: block;
+			}
+			@keyframes slideUp {
+				from {
+					opacity: 0;
+					transform: translateX(-50%) translateY(16px);
+				}
+				to {
+					opacity: 1;
+					transform: translateX(-50%) translateY(0);
+				}
+			}
+
+			.card-header {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				margin-bottom: 8px;
+			}
+			.card-dest-name {
+				font-size: 0.8rem;
+				font-weight: 700;
+				color: var(--text);
+				margin-bottom: 4px;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				max-width: 260px;
+			}
+			.card-mode-tag {
+				font-family: "Space Mono", monospace;
+				font-size: 0.55rem;
+				letter-spacing: 2px;
+				text-transform: uppercase;
+				color: var(--muted);
+			}
+			.card-mode-icon {
+				font-size: 1.3rem;
+			}
+			.card-dist {
+				font-size: 2.5rem;
+				font-weight: 800;
+				line-height: 1;
+				margin-bottom: 3px;
+			}
+			.dist-car {
+				color: var(--car-line);
+			}
+			.dist-walk {
+				color: var(--walk-line);
+			}
+			.dist-bike {
+				color: var(--accent);
+			}
+			.card-sub {
+				font-family: "Space Mono", monospace;
+				font-size: 0.62rem;
+				color: var(--muted);
+				margin-bottom: 14px;
+			}
+			.card-stats {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 8px;
+			}
+			.stat-box {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 8px 12px;
+			}
+			.stat-label {
+				font-family: "Space Mono", monospace;
+				font-size: 0.52rem;
+				color: var(--muted);
+				letter-spacing: 1px;
+				margin-bottom: 3px;
+			}
+			.stat-value {
+				font-weight: 700;
+				font-size: 0.9rem;
+			}
+
+			#loading {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				z-index: 950;
+				display: none;
+				flex-direction: column;
+				align-items: center;
+				gap: 12px;
+			}
+			#loading.visible {
+				display: flex;
+			}
+			.spinner {
+				width: 36px;
+				height: 36px;
+				border: 3px solid var(--border);
+				border-top-color: var(--accent);
+				border-radius: 50%;
+				animation: spin 0.8s linear infinite;
+			}
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+			.loading-text {
+				font-family: "Space Mono", monospace;
+				font-size: 0.7rem;
+				color: var(--muted);
+			}
+
+			#btn-reset {
+				position: absolute;
+				top: 14px;
+				right: 14px;
+				z-index: 900;
+				background: var(--surface);
+				border: 1px solid var(--border);
+				color: var(--text);
+				font-family: "Space Mono", monospace;
+				font-size: 0.68rem;
+				padding: 7px 14px;
+				border-radius: 8px;
+				cursor: pointer;
+				transition:
+					border-color 0.2s,
+					background 0.2s;
+			}
+			#btn-reset:hover {
+				border-color: var(--accent2);
+				background: rgba(255, 61, 113, 0.1);
+			}
+
+			#error-toast {
+				position: absolute;
+				top: 14px;
+				left: 50%;
+				transform: translateX(-50%);
+				z-index: 960;
+				background: rgba(255, 61, 113, 0.12);
+				border: 1px solid var(--accent2);
+				border-radius: 8px;
+				padding: 8px 18px;
+				font-family: "Space Mono", monospace;
+				font-size: 0.68rem;
+				color: var(--accent2);
+				display: none;
+				white-space: nowrap;
+			}
+
+			.custom-marker {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 30px;
+				height: 30px;
+				border-radius: 50% 50% 50% 0;
+				transform: rotate(-45deg);
+				box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+			}
+			.custom-marker span {
+				transform: rotate(45deg);
+				font-weight: 800;
+				font-size: 0.72rem;
+				font-family: "Syne", sans-serif;
+			}
+			.marker-a {
+				background: var(--point-a);
+				color: #000;
+			}
+			.marker-b {
+				background: var(--point-b);
+				color: #fff;
+			}
+
+			.leaflet-control-attribution {
+				background: rgba(10, 12, 16, 0.75) !important;
+				color: var(--muted) !important;
+			}
+			.leaflet-control-attribution a {
+				color: var(--accent) !important;
+			}
+			.leaflet-control-zoom a {
+				background: var(--surface) !important;
+				border-color: var(--border) !important;
+				color: var(--text) !important;
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<div class="logo">
+				RUTA<span>CALC</span><small>DESDE COMPUBETEL</small>
+			</div>
+
+			<div class="mode-toggle">
+				<button class="mode-btn active" data-mode="car">🚗 Auto</button>
+				<button class="mode-btn" data-mode="walk">🚶 A pie</button>
+				<button class="mode-btn" data-mode="bike">🚲 Bici</button>
+			</div>
+
+			<div class="search-wrap">
+				<span class="search-icon">🔍</span>
+				<input
+					id="search-input"
+					type="text"
+					placeholder="Buscar, pegar link de Maps o coordenadas…"
+					autocomplete="off"
+					spellcheck="false"
+				/>
+				<button id="search-clear" title="Limpiar">✕</button>
+				<div id="maps-link-hint">
+					<span class="mh-icon">🗺️</span>
+					<span class="mh-text" id="mh-text"
+						>Link de Google Maps detectado</span
+					>
+					<button class="mh-btn" id="mh-btn">Ir →</button>
+				</div>
+				<div id="autocomplete"></div>
+			</div>
+
+			<div class="header-right">
+				<div class="info-pill">
+					<span class="pill-dot a"></span>
+					<span class="pill-label">ORIGEN&nbsp;</span>
+					<span>Compubetel</span>
+				</div>
+				<div class="info-pill">
+					<span class="pill-dot b"></span>
+					<span class="pill-label">DESTINO&nbsp;</span>
+					<span id="coord-b">—</span>
+				</div>
+			</div>
+		</header>
+
+		<div id="map-wrap">
+			<div id="map"></div>
+			<div id="hint">
+				📍 Busca un destino, pega un link de Maps o haz clic en el mapa
+			</div>
+			<button id="btn-reset">↺ Reiniciar</button>
+			<div id="loading">
+				<div class="spinner"></div>
+				<div class="loading-text" id="loading-text">
+					Calculando ruta...
+				</div>
+			</div>
+			<div id="error-toast"></div>
+
+			<div id="result-card">
+				<div class="card-dest-name" id="card-dest-name">Destino</div>
+				<div class="card-header">
+					<span class="card-mode-tag" id="card-mode-tag"
+						>EN AUTO</span
+					>
+					<span class="card-mode-icon" id="card-mode-icon">🚗</span>
+				</div>
+				<div class="card-dist" id="card-dist">—</div>
+				<div class="card-sub" id="card-sub">—</div>
+				<div class="card-stats">
+					<div class="stat-box">
+						<div class="stat-label">DISTANCIA</div>
+						<div class="stat-value" id="stat-dist">—</div>
+					</div>
+					<div class="stat-box">
+						<div class="stat-label">TIEMPO EST.</div>
+						<div class="stat-value" id="stat-time">—</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+		<script>
+			// ── Constants ─────────────────────────────────────────────────────
+			const ORIGIN = {
+				lat: 9.8647417,
+				lng: -83.9151178,
+				name: "Compubetel",
+			};
+
+			// ── Map ───────────────────────────────────────────────────────────
+			const map = L.map("map", { zoomControl: true }).setView(
+				[ORIGIN.lat, ORIGIN.lng],
+				14,
+			);
+			L.tileLayer(
+				"https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+				{
+					attribution: "© OpenStreetMap © CARTO",
+					subdomains: "abcd",
+					maxZoom: 19,
+				},
+			).addTo(map);
+
+			// ── State ─────────────────────────────────────────────────────────
+			let destMarker = null;
+			let routeLayer = null;
+			let mode = "car";
+			let searchTimer = null;
+			let acSelected = -1;
+			let acItems = [];
+			let currentDestName = "";
+			let pendingMapsUrl = null; // stores detected maps URL
+
+			// ── DOM ───────────────────────────────────────────────────────────
+			const hint = document.getElementById("hint");
+			const resultCard = document.getElementById("result-card");
+			const loading = document.getElementById("loading");
+			const loadingText = document.getElementById("loading-text");
+			const errorToast = document.getElementById("error-toast");
+			const coordBEl = document.getElementById("coord-b");
+			const cardDist = document.getElementById("card-dist");
+			const cardSub = document.getElementById("card-sub");
+			const statDist = document.getElementById("stat-dist");
+			const statTime = document.getElementById("stat-time");
+			const cardModeTag = document.getElementById("card-mode-tag");
+			const cardModeIcon = document.getElementById("card-mode-icon");
+			const cardDestName = document.getElementById("card-dest-name");
+			const searchInput = document.getElementById("search-input");
+			const searchClear = document.getElementById("search-clear");
+			const acDropdown = document.getElementById("autocomplete");
+			const mapsHint = document.getElementById("maps-link-hint");
+			const mhText = document.getElementById("mh-text");
+			const mhBtn = document.getElementById("mh-btn");
+
+			// ── Mode config ───────────────────────────────────────────────────
+			const modeConfig = {
+				car: {
+					osrm: "driving",
+					label: "EN AUTO",
+					icon: "🚗",
+					color: "#f5a623",
+					distClass: "dist-car",
+				},
+				walk: {
+					osrm: "foot",
+					label: "A PIE",
+					icon: "🚶",
+					color: "#7ed321",
+					distClass: "dist-walk",
+				},
+				bike: {
+					osrm: "cycling",
+					label: "EN BICI",
+					icon: "🚲",
+					color: "#00e5ff",
+					distClass: "dist-bike",
+				},
+			};
+
+			// ── Origin marker ─────────────────────────────────────────────────
+			function makeIcon(letter, cls) {
+				return L.divIcon({
+					className: "",
+					html: `<div class="custom-marker ${cls}"><span>${letter}</span></div>`,
+					iconSize: [30, 30],
+					iconAnchor: [15, 30],
+				});
+			}
+			L.marker([ORIGIN.lat, ORIGIN.lng], {
+				icon: makeIcon("A", "marker-a"),
+			})
+				.addTo(map)
+				.bindPopup(`<b style="font-family:Syne">${ORIGIN.name}</b>`);
+
+			// ── Mode buttons ──────────────────────────────────────────────────
+			document.querySelectorAll(".mode-btn").forEach((btn) => {
+				btn.addEventListener("click", () => {
+					document
+						.querySelectorAll(".mode-btn")
+						.forEach((b) => b.classList.remove("active"));
+					btn.classList.add("active");
+					mode = btn.dataset.mode;
+					if (destMarker)
+						calcRoute(destMarker.getLatLng(), currentDestName);
+				});
+			});
+
+			// ── Helpers ───────────────────────────────────────────────────────
+			function fmtCoord(ll) {
+				return `${ll.lat.toFixed(5)}, ${ll.lng.toFixed(5)}`;
+			}
+			function fmtDist(km) {
+				if (km >= 1000) return `${(km / 1000).toFixed(2)}×10³ km`;
+				if (km >= 1) return `${km.toFixed(1)} km`;
+				return `${Math.round(km * 1000)} m`;
+			}
+			function fmtTime(secs) {
+				const h = Math.floor(secs / 3600),
+					m = Math.floor((secs % 3600) / 60);
+				if (h > 0) return `${h}h ${m}min`;
+				if (m > 0) return `${m} min`;
+				return `${Math.round(secs)} seg`;
+			}
+
+			// ── Coord parser ──────────────────────────────────────────────────
+			function parseCoords(str) {
+				const clean = str.replace(/[°NSEW]/gi, " ").trim();
+				const parts = clean.split(/[\s,;]+/).filter(Boolean);
+				if (parts.length >= 2) {
+					const lat = parseFloat(parts[0]);
+					const lng = parseFloat(parts[1]);
+					if (
+						!isNaN(lat) &&
+						!isNaN(lng) &&
+						lat >= -90 &&
+						lat <= 90 &&
+						lng >= -180 &&
+						lng <= 180
+					) {
+						return { lat, lng };
+					}
+				}
+				return null;
+			}
+
+			// ── Google Maps link detection & parsing ──────────────────────────
+
+			/**
+			 * Returns true if the string looks like any Google Maps URL
+			 * (short link, place link, search link, etc.)
+			 */
+			function isMapsUrl(str) {
+				return /https?:\/\/(maps\.app\.goo\.gl|goo\.gl\/maps|maps\.google\.|www\.google\.[a-z.]+\/maps)\S*/i.test(
+					str.trim(),
+				);
+			}
+
+			/**
+			 * Try to extract lat/lng directly from a long-form Google Maps URL.
+			 * Handles patterns like:
+			 *   @lat,lng,zoom
+			 *   /place/.../@lat,lng
+			 *   ?q=lat,lng
+			 *   ll=lat,lng
+			 *   !3dlat!4dlng  (data parameter encoding)
+			 */
+			function extractCoordsFromMapsUrl(url) {
+				// @lat,lng,Xz  or  @lat,lng,Xm
+				let m = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+				if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+				// ?q=lat,lng  or  &q=lat,lng
+				m = url.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+				if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+				// ll=lat,lng
+				m = url.match(/[?&]ll=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+				if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+				// !3d<lat>!4d<lng>  (embedded data param)
+				m = url.match(/!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/);
+				if (m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+
+				return null;
+			}
+
+			/**
+			 * Expand a short Google Maps URL (goo.gl/maps or maps.app.goo.gl)
+			 * using a CORS proxy, then extract coordinates from the final URL.
+			 */
+			async function resolveShortMapsUrl(url) {
+				// Proxies that follow redirects and return the final URL
+				const proxies = [
+					`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+					`https://corsproxy.io/?${encodeURIComponent(url)}`,
+				];
+
+				// ── Strategy 1: allorigins (returns JSON with final URL) ──────
+				try {
+					const res = await fetch(proxies[0], {
+						signal: AbortSignal.timeout(8000),
+					});
+					const json = await res.json();
+					// allorigins puts the final URL in status.url
+					const finalUrl = json?.status?.url || "";
+					if (finalUrl) {
+						const coords = extractCoordsFromMapsUrl(finalUrl);
+						if (coords) return { coords, finalUrl };
+					}
+					// Also try to parse it from the returned HTML body
+					if (json?.contents) {
+						const coordsFromBody = extractCoordsFromMapsUrl(
+							json.contents,
+						);
+						if (coordsFromBody)
+							return { coords: coordsFromBody, finalUrl: "" };
+					}
+				} catch (_) {
+					/* fall through */
+				}
+
+				// ── Strategy 2: corsproxy.io (follows redirect, check response URL) ──
+				try {
+					const res = await fetch(proxies[1], {
+						signal: AbortSignal.timeout(8000),
+						redirect: "follow",
+					});
+					const text = await res.text();
+					// Sometimes the coords are embedded in the page content
+					const coords =
+						extractCoordsFromMapsUrl(res.url || "") ||
+						extractCoordsFromMapsUrl(text);
+					if (coords) return { coords, finalUrl: res.url || "" };
+				} catch (_) {
+					/* fall through */
+				}
+
+				// ── Strategy 3: Nominatim reverse via the place name in URL ──
+				// Last resort: let user know we couldn't resolve it
+				return null;
+			}
+
+			/**
+			 * Main entry point: given any maps URL, return { lat, lng, name }.
+			 * For long-form URLs, parse directly. For short ones, resolve first.
+			 */
+			async function parseMapsUrl(url) {
+				const trimmed = url.trim();
+
+				// Long-form URL → try to extract immediately
+				if (/maps\.google\.|google\.[a-z.]+\/maps/i.test(trimmed)) {
+					const coords = extractCoordsFromMapsUrl(trimmed);
+					if (coords)
+						return { ...coords, name: "Ubicación de Google Maps" };
+				}
+
+				// Short URL (goo.gl/maps or maps.app.goo.gl) → must resolve
+				const result = await resolveShortMapsUrl(trimmed);
+				if (result?.coords) {
+					return {
+						...result.coords,
+						name: "Ubicación de Google Maps",
+					};
+				}
+
+				return null;
+			}
+
+			// ── Maps hint UI ──────────────────────────────────────────────────
+			function showMapsHint(url) {
+				pendingMapsUrl = url;
+				mhText.textContent =
+					"Link de Google Maps detectado — presiona 'Ir' para calcular";
+				mhBtn.textContent = "Ir →";
+				mhBtn.disabled = false;
+				mapsHint.classList.add("visible");
+				searchInput.classList.add("maps-link");
+				closeDropdown();
+			}
+
+			function hideMapsHint() {
+				mapsHint.classList.remove("visible");
+				searchInput.classList.remove("maps-link");
+				pendingMapsUrl = null;
+			}
+
+			async function resolveMapsLink(url) {
+				// Show spinner inside the hint button
+				mhBtn.disabled = true;
+				mhBtn.textContent = "";
+				const spinner = document.createElement("div");
+				spinner.className = "mh-spinner";
+				mhBtn.appendChild(spinner);
+				mhText.textContent = "Resolviendo enlace…";
+
+				try {
+					const result = await parseMapsUrl(url);
+					hideMapsHint();
+
+					if (!result) {
+						showError(
+							"No se pudieron extraer coordenadas del link. Intenta con el link largo de Google Maps.",
+						);
+						return;
+					}
+
+					const ll = { lat: result.lat, lng: result.lng };
+					const name = result.name || "Ubicación de Google Maps";
+					searchInput.value = `${ll.lat.toFixed(6)}, ${ll.lng.toFixed(6)}`;
+					showClear(true);
+					setDestination(ll, name);
+				} catch (err) {
+					hideMapsHint();
+					showError(
+						"Error al resolver el link de Maps. Intenta pegar el link largo.",
+					);
+				}
+			}
+
+			mhBtn.addEventListener("click", () => {
+				if (pendingMapsUrl) resolveMapsLink(pendingMapsUrl);
+			});
+
+			// Also resolve on Enter when maps hint is visible
+			searchInput.addEventListener(
+				"keydown",
+				(e) => {
+					if (
+						e.key === "Enter" &&
+						mapsHint.classList.contains("visible") &&
+						pendingMapsUrl
+					) {
+						e.preventDefault();
+						e.stopImmediatePropagation();
+						resolveMapsLink(pendingMapsUrl);
+						return;
+					}
+				},
+				true,
+			); // capture phase so it runs before the other keydown listener
+
+			// ── Set destination ───────────────────────────────────────────────
+			function setDestination(ll, name) {
+				currentDestName = name || fmtCoord(ll);
+				if (destMarker) destMarker.remove();
+				destMarker = L.marker([ll.lat, ll.lng], {
+					icon: makeIcon("B", "marker-b"),
+					draggable: true,
+				}).addTo(map);
+				destMarker.on("dragend", () => {
+					const newLL = destMarker.getLatLng();
+					coordBEl.textContent = fmtCoord(newLL);
+					currentDestName = fmtCoord(newLL);
+					searchInput.value = fmtCoord(newLL);
+					showClear(true);
+					calcRoute(newLL, currentDestName);
+				});
+				coordBEl.textContent = fmtCoord(ll);
+				hint.classList.add("hidden");
+				calcRoute(ll, currentDestName);
+			}
+
+			// ── OSRM routing ──────────────────────────────────────────────────
+			async function calcRoute(destLL, destName) {
+				if (routeLayer) {
+					routeLayer.remove();
+					routeLayer = null;
+				}
+				resultCard.classList.remove("visible");
+				loadingText.textContent = "Calculando ruta...";
+				loading.classList.add("visible");
+				hideError();
+
+				const cfg = modeConfig[mode];
+				const url =
+					`https://router.project-osrm.org/route/v1/${cfg.osrm}/` +
+					`${ORIGIN.lng},${ORIGIN.lat};${destLL.lng},${destLL.lat}` +
+					`?overview=full&geometries=geojson`;
+				try {
+					const res = await fetch(url);
+					const data = await res.json();
+					if (data.code !== "Ok" || !data.routes?.length)
+						throw new Error(
+							"No se encontró ruta para este destino.",
+						);
+
+					const route = data.routes[0];
+					const km = route.distance / 1000;
+					const secs = route.duration;
+
+					routeLayer = L.geoJSON(route.geometry, {
+						style: { color: cfg.color, weight: 5, opacity: 0.9 },
+					}).addTo(map);
+					map.fitBounds(routeLayer.getBounds().pad(0.15));
+
+					cardDestName.textContent = destName || fmtCoord(destLL);
+					cardModeTag.textContent = cfg.label;
+					cardModeIcon.textContent = cfg.icon;
+					cardDist.className = `card-dist ${cfg.distClass}`;
+					cardDist.textContent = fmtDist(km);
+					cardSub.textContent = `${(km * 0.621371).toFixed(2)} millas`;
+					statDist.textContent = fmtDist(km);
+					statTime.textContent = fmtTime(secs);
+					resultCard.classList.add("visible");
+				} catch (err) {
+					showError(err.message || "Error al calcular la ruta.");
+				} finally {
+					loading.classList.remove("visible");
+				}
+			}
+
+			// ── Nominatim geocoding ───────────────────────────────────────────
+			async function geocode(query) {
+				const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6&addressdetails=1&accept-language=es`;
+				const res = await fetch(url, {
+					headers: { "Accept-Language": "es" },
+				});
+				return res.json();
+			}
+
+			// ── Autocomplete logic ────────────────────────────────────────────
+			function showClear(v) {
+				searchClear.style.display = v ? "block" : "none";
+			}
+			function closeDropdown() {
+				acDropdown.classList.remove("open");
+				acDropdown.innerHTML = "";
+				acSelected = -1;
+				acItems = [];
+			}
+
+			function renderDropdown(items, isLoading, isEmpty) {
+				acDropdown.innerHTML = "";
+				acSelected = -1;
+				acItems = items;
+				if (isLoading) {
+					acDropdown.innerHTML =
+						'<div class="ac-loading">⏳ Buscando…</div>';
+					acDropdown.classList.add("open");
+					return;
+				}
+				if (isEmpty) {
+					acDropdown.innerHTML =
+						'<div class="ac-empty">Sin resultados. Intenta con otras palabras.</div>';
+					acDropdown.classList.add("open");
+					return;
+				}
+				if (!items.length) {
+					closeDropdown();
+					return;
+				}
+
+				items.forEach((item) => {
+					const el = document.createElement("div");
+					el.className = "ac-item";
+					const typeIcons = {
+						amenity: "🏢",
+						shop: "🛍️",
+						restaurant: "🍽️",
+						hotel: "🏨",
+						hospital: "🏥",
+						school: "🏫",
+						road: "🛣️",
+						residential: "🏠",
+						default: "📍",
+					};
+					const icon =
+						typeIcons[item.type] ||
+						typeIcons[item.class] ||
+						typeIcons.default;
+					const parts = item.display_name.split(", ");
+					const main = parts.slice(0, 2).join(", ");
+					const sub = parts.slice(2).join(", ");
+					el.innerHTML = `<span class="ac-icon">${icon}</span><div><div class="ac-main">${main}</div><div class="ac-sub">${sub}</div></div>`;
+					el.addEventListener("mousedown", (e) => {
+						e.preventDefault();
+						selectItem(item);
+					});
+					acDropdown.appendChild(el);
+				});
+				acDropdown.classList.add("open");
+			}
+
+			function selectItem(item) {
+				const ll = {
+					lat: parseFloat(item.lat),
+					lng: parseFloat(item.lon),
+				};
+				const name = item.display_name
+					.split(", ")
+					.slice(0, 2)
+					.join(", ");
+				searchInput.value = name;
+				showClear(true);
+				closeDropdown();
+				setDestination(ll, name);
+			}
+
+			// ── Search input events ───────────────────────────────────────────
+			searchInput.addEventListener("input", () => {
+				const val = searchInput.value.trim();
+				showClear(val.length > 0);
+
+				if (!val) {
+					closeDropdown();
+					hideMapsHint();
+					return;
+				}
+
+				// ① Google Maps URL?
+				if (isMapsUrl(val)) {
+					closeDropdown();
+					showMapsHint(val);
+					return;
+				}
+
+				// Hide maps hint if user edits away from a URL
+				hideMapsHint();
+
+				// ② Raw coordinates?
+				const coords = parseCoords(val);
+				if (coords) {
+					acItems = [
+						{
+							_isCoord: true,
+							lat: coords.lat,
+							lon: coords.lng,
+							display_name: `${coords.lat}, ${coords.lng}`,
+						},
+					];
+					acDropdown.innerHTML = "";
+					const el = document.createElement("div");
+					el.className = "ac-item";
+					el.innerHTML = `<span class="ac-icon">📌</span><div><div class="ac-main">Ir a coordenadas</div><div class="ac-sub">${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}</div></div>`;
+					el.addEventListener("mousedown", (e) => {
+						e.preventDefault();
+						searchInput.value = `${coords.lat}, ${coords.lng}`;
+						showClear(true);
+						closeDropdown();
+						setDestination(
+							{ lat: coords.lat, lng: coords.lng },
+							`${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
+						);
+					});
+					acDropdown.appendChild(el);
+					acDropdown.classList.add("open");
+					return;
+				}
+
+				// ③ Debounced Nominatim search
+				clearTimeout(searchTimer);
+				if (val.length < 3) {
+					closeDropdown();
+					return;
+				}
+				renderDropdown([], true, false);
+				searchTimer = setTimeout(async () => {
+					try {
+						const results = await geocode(val);
+						renderDropdown(results, false, results.length === 0);
+					} catch {
+						closeDropdown();
+					}
+				}, 400);
+			});
+
+			// Keyboard navigation
+			searchInput.addEventListener("keydown", (e) => {
+				// Maps hint Enter handled in capture listener above
+				const items = acDropdown.querySelectorAll(".ac-item");
+				if (!items.length) {
+					if (e.key === "Enter") {
+						const coords = parseCoords(searchInput.value.trim());
+						if (coords) {
+							closeDropdown();
+							setDestination(
+								{ lat: coords.lat, lng: coords.lng },
+								`${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`,
+							);
+						}
+					}
+					return;
+				}
+				if (e.key === "ArrowDown") {
+					e.preventDefault();
+					acSelected = Math.min(acSelected + 1, items.length - 1);
+					items.forEach((el, i) =>
+						el.classList.toggle("selected", i === acSelected),
+					);
+				} else if (e.key === "ArrowUp") {
+					e.preventDefault();
+					acSelected = Math.max(acSelected - 1, -1);
+					items.forEach((el, i) =>
+						el.classList.toggle("selected", i === acSelected),
+					);
+				} else if (e.key === "Enter") {
+					e.preventDefault();
+					if (acSelected >= 0 && acItems[acSelected]) {
+						selectItem(acItems[acSelected]);
+					} else {
+						const val = searchInput.value.trim();
+						if (val.length >= 3) {
+							closeDropdown();
+							loadingText.textContent = "Buscando lugar...";
+							loading.classList.add("visible");
+							geocode(val)
+								.then((results) => {
+									loading.classList.remove("visible");
+									if (results.length) selectItem(results[0]);
+									else
+										showError(
+											"No se encontró el lugar. Intenta con más detalles.",
+										);
+								})
+								.catch(() => {
+									loading.classList.remove("visible");
+									showError("Error al buscar.");
+								});
+						}
+					}
+				} else if (e.key === "Escape") {
+					closeDropdown();
+					hideMapsHint();
+				}
+			});
+
+			searchInput.addEventListener("blur", () =>
+				setTimeout(() => {
+					closeDropdown();
+					// Don't hide maps hint on blur — user might click the "Ir" button
+				}, 150),
+			);
+
+			searchInput.addEventListener("focus", () => {
+				const val = searchInput.value.trim();
+				if (isMapsUrl(val)) {
+					showMapsHint(val);
+					return;
+				}
+				if (val.length >= 3)
+					searchInput.dispatchEvent(new Event("input"));
+			});
+
+			searchClear.addEventListener("click", () => {
+				searchInput.value = "";
+				showClear(false);
+				closeDropdown();
+				hideMapsHint();
+				searchInput.focus();
+			});
+
+			document.addEventListener("click", (e) => {
+				if (!e.target.closest(".search-wrap")) {
+					closeDropdown();
+					// Keep maps hint visible if the URL is still in the box
+				}
+			});
+
+			// ── Map click ─────────────────────────────────────────────────────
+			map.on("click", function (e) {
+				const ll = e.latlng;
+				const label = fmtCoord(ll);
+				searchInput.value = label;
+				showClear(true);
+				closeDropdown();
+				hideMapsHint();
+				setDestination(ll, label);
+			});
+
+			// ── Reset ─────────────────────────────────────────────────────────
+			document
+				.getElementById("btn-reset")
+				.addEventListener("click", () => {
+					if (destMarker) {
+						destMarker.remove();
+						destMarker = null;
+					}
+					if (routeLayer) {
+						routeLayer.remove();
+						routeLayer = null;
+					}
+					resultCard.classList.remove("visible");
+					hint.classList.remove("hidden");
+					coordBEl.textContent = "—";
+					currentDestName = "";
+					searchInput.value = "";
+					showClear(false);
+					closeDropdown();
+					hideMapsHint();
+					map.setView([ORIGIN.lat, ORIGIN.lng], 14);
+					hideError();
+				});
+
+			// ── Error helpers ─────────────────────────────────────────────────
+			function showError(msg) {
+				hint.classList.add("hidden");
+				errorToast.textContent = "⚠ " + msg;
+				errorToast.style.display = "block";
+				setTimeout(hideError, 6000);
+			}
+			function hideError() {
+				errorToast.style.display = "none";
+			}
+		</script>
+	</body>
+</html>
